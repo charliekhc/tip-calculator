@@ -1,1 +1,10 @@
 .agent/
+node_modules/
+dist/
+.env*
+!.env.example
+.claude/
+.codex/
+.cursor/
+.gemini/
+.tmp-scan-*/
