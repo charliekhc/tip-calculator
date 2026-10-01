@@ -7,3 +7,4 @@ dist/
 .codex/
 .cursor/
 .gemini/
+.tmp-scan-*/
