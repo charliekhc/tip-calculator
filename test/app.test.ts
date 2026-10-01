@@ -4,7 +4,6 @@ import type { AppConfig } from '../src/config/load.js';
 
 const config: AppConfig = {
   allowedTipPercents: [0n, 10n, 15n, 20n],
-  suggestedTipPercent: 15n,
   currency: 'USD',
   maxBillCents: 100000000n,
   maxPeople: 100n,

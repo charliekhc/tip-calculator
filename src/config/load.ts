@@ -5,7 +5,6 @@ import { isCurrencyCode } from '../money/currency.js';
 
 export interface AppConfig {
   readonly allowedTipPercents: readonly bigint[];
-  readonly suggestedTipPercent: bigint;
   readonly currency: 'USD';
   readonly maxBillCents: bigint;
   readonly maxPeople: bigint;
@@ -56,7 +55,6 @@ export function parseConfig(text: string, env: Env): AppConfig {
   const file = readConfigObject(text);
 
   const allowedTipPercents = tipList(file.allowedTipPercents);
-  const suggestedTipPercent = allowedTipPercents.includes(15n) ? 15n : (allowedTipPercents[0] ?? 0n);
   const currency = currencyCode(file.currency);
   const maxBillCents = integerInRange('maxBillCents', file.maxBillCents, 1n, MAX_BILL_CENTS_CEILING);
   const maxPeople = integerInRange('maxPeople', file.maxPeople, 1n, MAX_PEOPLE_CEILING);
@@ -69,7 +67,6 @@ export function parseConfig(text: string, env: Env): AppConfig {
 
   return {
     allowedTipPercents,
-    suggestedTipPercent,
     currency,
     maxBillCents,
     maxPeople,
