@@ -1,5 +1,106 @@
 # Review — PR 1
 
+## Round 4 — 2026-10-01 · scope: slice (M1 scaffold)
+- **Code review:** new public repository; base (merge base) `0fd7eed01fa01b7071fe6eb41337ed258e65ef28` · head `84b4df226b0b9dbf7d4c234bc9152c270e43750c` · head re-checked at end: yes
+- **Spec review:** approved spec `docs/specs/2026-10-01-tip-calculator-design.md` · version `1.2` · hash `ee3c51544413a45c581a9dc1ce15a8231a66836a`
+
+**Verdict:** Approved
+**Model used:** GPT-6 · **Switch model next step?** No — the M1 slice is approved at this head; M2's money and HTTP behavior will also need deep-tier review.
+
+### Findings
+- None open for this M1 slice.
+
+### Prior-round disposition
+| Round 3 finding | Round 4 result | Evidence |
+|---|---|---|
+| `ci` did not block merge on the former private repository | Resolved in the new public repository | GitHub branch-protection API for `main` reports required context `ci`, `strict: true`, `enforce_admins: true`, force-push and deletion disabled. The `ci` check passed on the pinned head. |
+
+The new history rewrites commit IDs. A tree comparison of the prior reviewed head `c3ec51a53e43da3043ac7f7fca5fac85d64ed909` and this head found no difference in `src/`, `config/`, `test/`, `scripts/`, `.github/`, package files, lint/typecheck configuration or the runbook. Only `agents/PROJECT.md` and `docs/DECISIONS.md` differ: the project root is now relative, the repository points to the public remote, and the owner decision is recorded. The published `main`, feature and `agent-logs` histories contain no author or committer address outside GitHub noreply addresses.
+
+### Self-check audit
+Applicable rules listed independently for this M1 diff: UNI-01 through UNI-07, UNI-09, UNI-11 through UNI-14, UNI-16, UNI-19; MON-01 through MON-03; and both `PROJECT.md` §9 architecture rules for the M1 portions. The current PR self-check covers these IDs. The code and tests are identical to the round 3 reviewed tree, and the changed UNI-13 `pass` claim is supported by the GitHub protection configuration. UNI-11's public repository exposure is an owner decision recorded in `docs/DECISIONS.md:5-12`. UNI-08, UNI-10, UNI-15, UNI-17 and UNI-18 have no matching feature in this JSON-only, database-free slice; MON-04 through MON-07 belong to M2. The reported historical UNI-12 temporary writes are not a change in this PR's pinned diff.
+
+### Verification performed
+| Command / check | Result |
+|---|---|
+| `git fetch origin`; Git host head; `git cat-file -e`; `git merge-base` | Pinned new head `84b4df226b0b9dbf7d4c234bc9152c270e43750c`, merge base `0fd7eed01fa01b7071fe6eb41337ed258e65ef28` |
+| Three-dot diff inventory, commit log, `git diff --check`, old-vs-new tree comparison | 27 PR files, 14 commits, no whitespace errors; only two documentation files differ from the round 3 tree |
+| `npm ci`; `npm run typecheck`; `npm run lint`; `npm test`; `npm run build`; `npm run secret-scan` | Passed in the detached checkout; 230/230 tests passed; secret scan clean |
+| `npm run audit` | Passed: 0 vulnerabilities after network access; the initial sandbox run could not reach npm's advisory service |
+| GitHub repository and branch-protection APIs | Repository public; `main` requires strict `ci`, applies to administrators, disallows force-push and deletion |
+| GitHub PR status | Open; `ci` passed on the pinned head; merge state clean |
+| Published-branch author and committer address check | 0 non-noreply addresses across `origin/main`, `origin/feat/m1-scaffold` and `origin/agent-logs` |
+| `git status --porcelain --untracked-files=no` in the detached checkout; final Git host head | Checkout clean; head still `84b4df2` |
+
+### Residual risks and test gaps
+- Local checks ran on Node 26.3.0; the pinned GitHub CI job passed on its configured Node 22 environment.
+- M2 request parsing, money calculation, response encoding and error logging remain outside this slice and require their own review. A failing or pending `ci` check was not induced; the required-check configuration was read directly from GitHub.
+
+### Required before merge
+- No code or gate corrections. The owner remains the merger; follow the kit's `approved 1` archival step before merging.
+
+### Deferred conditions
+- None.
+
+### Optional improvements
+- None.
+
+## Round 3 — 2026-10-01 · scope: slice (M1 scaffold)
+- **Code review:** base (merge base) `19340c4a01a9b596842c20e067ef222185b903d5` · head `c3ec51a53e43da3043ac7f7fca5fac85d64ed909` · head re-checked at end: yes
+- **Spec review:** approved spec `docs/specs/2026-10-01-tip-calculator-design.md` · version `1.2` · hash `ee3c51544413a45c581a9dc1ce15a8231a66836a`
+
+**Verdict:** Revision required
+**Model used:** GPT-6 · **Switch model next step?** No — the remaining issue is a milestone delivery gate, which needs deep-tier review once repository protection changes.
+
+### Findings
+
+### [P1] The CI check still does not block merge
+- Category: guardrail mismatch
+- Rule: UNI-13; spec §9 M1 done-when
+- Evidence: `.github/workflows/ci.yml:11-26` defines the `ci` job and the GitHub check passed for head `c3ec51a`, but the repository is private and both the branch-protection and repository-rulesets API calls returned HTTP 403: “Upgrade to GitHub Pro or make this repository public to enable this feature.” The PR self-check marks UNI-13 `partial`.
+- Failure scenario: PR 1 can be merged while `ci` is pending or failing.
+- Why it matters: The approved M1 completion criterion requires an enforceable required CI check before merge.
+- Required correction: The owner establishes a required-`ci` merge gate on `main` by resolving the repository/account limitation, then provides a readable protection or ruleset configuration showing the check is required.
+- Owner: owner / infrastructure
+- Verification: Read the Git host's protection or ruleset configuration for `main` and confirm a pending or failed `ci` check blocks merge.
+- Status: open
+
+### Prior-round disposition
+| Round 2 finding | Round 3 result | Evidence |
+|---|---|---|
+| Hardcoded suggested tip percentage | Resolved | `src/config/load.ts:6-14,54-76` has no suggestion field or 15% choice; the related assertions were removed |
+| Scanner silently passes beneath `.agent` | Resolved | `scripts/secret-scan.sh:9,15-17` scans relative to its root; `test/secret-scan.test.ts:89-96` covers `.agent`, `node_modules` and `dist` ancestors; all 230 tests passed in the mandated detached checkout |
+| Scanner prints matched secret values | Resolved | `scripts/secret-scan.sh:20-24,32-44` emits path and line only; `test/secret-scan.test.ts:65-86,104-109` asserts fixture values and matched lines are absent from output |
+| CI does not block merge | Still open, repeated above | GitHub branch protection and rulesets both returned HTTP 403 |
+
+### Self-check audit
+Applicable rules listed independently for this M1 diff: UNI-01 through UNI-07, UNI-09, UNI-11 through UNI-14, UNI-16, UNI-19; MON-01 through MON-03; and both `PROJECT.md` §9 architecture rules for the parts implemented in M1. The PR has a current self-check covering these IDs. The three code fixes above agree with their `pass` claims; UNI-13 is correctly marked `partial` and remains open. UNI-08, UNI-10, UNI-15, UNI-17 and UNI-18 have no matching feature in this JSON-only, database-free slice; MON-04 through MON-07 belong to M2. UNI-12 is marked `partial` because of the builder's reported temporary writes outside the project; that report is not a change in the pinned PR diff.
+
+### Verification performed
+| Command / check | Result |
+|---|---|
+| `git fetch origin`; Git host head; `git cat-file -e`; `git merge-base` | Pinned head `c3ec51a53e43da3043ac7f7fca5fac85d64ed909`, merge base `19340c4a01a9b596842c20e067ef222185b903d5` |
+| Three-dot diff inventory, commit log and `git diff --check` | 27 changed files, 13 commits, no whitespace errors |
+| `npm ci`; `npm run typecheck`; `npm run lint`; `npm test`; `npm run build`; `npm run secret-scan` | Passed in detached checkout; 230/230 tests passed; secret scan clean |
+| `npm run audit` | Passed: 0 vulnerabilities after network access; initial sandbox run could not reach npm's advisory service |
+| `npm start` and local `GET /split`; `PORT=abc npm start`; `HOST= npm start` | Returned 404 for the M1 route; invalid overrides exited non-zero and named their keys |
+| GitHub `ci` status on pinned head | Passed, but not required for merge |
+| GitHub repository visibility, branch protection and rulesets | Private repository; both gate APIs returned HTTP 403 with a plan/visibility limitation |
+| `git status --porcelain --untracked-files=no` in detached checkout; final Git host head | Checkout clean; head still `c3ec51a` |
+
+### Residual risks and test gaps
+- M2 request parsing, calculation and response encoding are outside this slice. The logging behavior for those future routes needs review in M2.
+- The dependency audit was run locally and CI passed for this head. Repository enforcement of the passed check remains unavailable.
+
+### Required before merge
+- Resolve the open P1 merge gate, then request `review 1` for its verification.
+
+### Deferred conditions
+- None.
+
+### Optional improvements
+- None.
+
 ## Round 2 — 2026-10-01 · scope: slice (M1 scaffold)
 - **Code review:** base (merge base) `19340c4a01a9b596842c20e067ef222185b903d5` · head `e647ef1db79a42e36f94109f11371e57ef4440f7` · head re-checked at end: yes
 - **Spec review:** approved spec `docs/specs/2026-10-01-tip-calculator-design.md` · version `1.2` · hash `ee3c51544413a45c581a9dc1ce15a8231a66836a`
