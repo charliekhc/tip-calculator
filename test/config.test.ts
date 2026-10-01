@@ -39,6 +39,7 @@ describe('loadConfig', () => {
     });
     expect(config).toEqual({
       allowedTipPercents: [0n, 10n, 15n, 20n],
+      suggestedTipPercent: 15n,
       currency: 'USD',
       maxBillCents: 100000000n,
       maxPeople: 100n,
@@ -68,6 +69,11 @@ describe('parseConfig types', () => {
     const config = parseConfig(configText(), {});
     expect(typeof config.port).toBe('number');
     expect(typeof config.maxBodyBytes).toBe('number');
+  });
+
+  it('suggests 15 when it is allowed and the first allowed tip otherwise', () => {
+    expect(parseConfig(configText(), {}).suggestedTipPercent).toBe(15n);
+    expect(parseConfig(configText({ allowedTipPercents: '[5, 10]' }), {}).suggestedTipPercent).toBe(5n);
   });
 
   it('reads the tip list from config with no fixed values in code', () => {
