@@ -57,7 +57,15 @@ curl -s -X POST http://127.0.0.1:3000/split \
 Expected response (`200`):
 
 ```json
-{"currency":"USD","billCents":12050,"tipPercent":15,"tipCents":1808,"totalCents":13858,"people":3,"sharesCents":[4620,4619,4619]}
+{
+  "currency": "USD",
+  "billCents": 12050,
+  "tipPercent": 15,
+  "tipCents": 1808,
+  "totalCents": 13858,
+  "people": 3,
+  "sharesCents": [4620, 4619, 4619]
+}
 ```
 
 Amounts are integer cents. `tipPercent` must be one of `allowedTipPercents` in `config/app.json`. Bad input returns `400`
@@ -68,6 +76,6 @@ The server logs no URLs, query strings or caller addresses. An unexpected error 
 ## Smoke test
 
 1. Start with the default config: `npm start`.
-2. In another terminal run the `curl` above. The response must match the expected response exactly.
+2. In another terminal run the `curl` above. The status is `200` and the body matches the expected response above, line for line (the body has no final newline).
 3. Run `curl -i -X POST http://127.0.0.1:3000/split -H 'Content-Type: application/json' -d '{"billCents":12050,"tipPercent":5,"people":3}'`. It returns `400` with `INVALID_TIP_PERCENT`.
 4. Stop the server. Start with a bad port: `PORT=abc npm start`. It exits with a non-zero code and prints a message naming `PORT`.
