@@ -2,6 +2,15 @@
 
 <!-- Committed. Newest at the top. One entry per decision. A settled decision is reopened only by the owner. -->
 
+## 2026-10-01 — M2 ships as one PR over the size target
+- **Decision:** M2 is one PR of 740 added lines (210 in `src/`, 496 in `test/`, the rest docs), over the 400-line target.
+- **Why:** The owner chose one PR over a split when offered both. The spec plans one PR per milestone, and a split would leave the money module and parser in a first PR that nothing calls yet.
+- **Alternatives rejected:** Two PRs (the owner declined).
+- **Scope / affects:** PR size target in `agents/PROJECT.md` §4, M2 only.
+- **Versions:** none
+- **Exception to a rule?** PR size target (400 LOC, `PROJECT.md` §4): compensating control is that the reviewer reads the PR in commit order (split, parser and encoder, route, docs); review date: M2 PR review.
+- **Decided by:** owner
+
 ## 2026-10-01 — M2 request handling details where the spec was silent
 - **Decision:** (1) The success and error bodies use the exact layouts in spec §4, written by `src/http/encode.ts` with no JSON library. (2) Any POST that is not read by the `application/json` parser, including one with no Content-Type and no body, gets `415 UNSUPPORTED_MEDIA_TYPE`. (3) All Fastify default content-type parsers are removed; one `application/json` parser hands the raw text to `parseBody`. (4) Three Fastify errors are mapped: invalid media type to 415, body too large and bad Content-Length to `400 INVALID_BODY`; everything else is `500 INTERNAL` with a generic message. (5) Only the 500 path is logged: one line `request failed` with the error name and code, nothing from the URL, query, headers, body or caller address. Expected 4xx answers and requests are not logged. (6) Body keys may arrive in any order; exactly three keys must be present. (7) `split()` throws `RangeError` for a negative bill or tip or fewer than one person, because the half-up formula is only defined for non-negative values; HTTP input cannot reach it because `parseBody` checks ranges first. (8) Field range checks run in the order bill, tip, people.
 - **Why:** The spec fixes the contract but not these edges. Fastify's built-in JSON parser reads numbers as floats, which D5 and MON-01 forbid. The sanitized error line follows UNI-09 and the round 1 logging decision.
