@@ -1,5 +1,99 @@
 # Review — PR 1
 
+## Round 2 — 2026-10-01 · scope: slice (M1 scaffold)
+- **Code review:** base (merge base) `19340c4a01a9b596842c20e067ef222185b903d5` · head `e647ef1db79a42e36f94109f11371e57ef4440f7` · head re-checked at end: yes
+- **Spec review:** approved spec `docs/specs/2026-10-01-tip-calculator-design.md` · version `1.2` · hash `ee3c51544413a45c581a9dc1ce15a8231a66836a`
+
+**Verdict:** Revision required
+**Model used:** GPT-6 · **Switch model next step?** No — money configuration, secret handling and the CI merge gate still need deep-tier review.
+
+### Findings
+
+### [P1] A tip percentage is hardcoded outside configuration
+- Category: guardrail mismatch
+- Rule: UNI-02; spec D9 and §8; `agents/PROJECT.md` §8
+- Evidence: `src/config/load.ts:8,59,72` adds `suggestedTipPercent` and chooses `15n` whenever the configured allowed list contains it. `config/app.json` has no suggestion key and the approved spec has no suggestion feature. `test/config.test.ts:75-76` locks in that behavior. The PR's UNI-02 self-check still says all tips are read from config, but the PR body says that self-check was last updated before this commit.
+- Failure scenario: An operator changes the allowed list, but the service still gives 15% special preference whenever it is present, with no configurable or approved rule for that choice.
+- Why it matters: The PR adds an unapproved business percentage and a new config output outside the M1 scope.
+- Required correction: Remove `suggestedTipPercent` and its tests from this PR. If the owner wants a suggestion feature, specify and approve its behavior and configuration before implementation. Update the self-check for the final head.
+- Owner: builder; owner for any new product requirement
+- Verification: Inspect the next diff for removal or an approved spec change, and search production source for the hardcoded choice.
+- Status: open
+
+### [P1] Secret-scan fixtures silently pass beneath the mandated review path
+- Category: defect / guardrail mismatch
+- Rule: UNI-07 (hard), UNI-13
+- Evidence: `scripts/secret-scan.sh:12-14` filters any path containing `/.agent/`. `test/secret-scan.test.ts:14-18` passes an absolute fixture root beneath the checkout. In the required detached checkout at `.agent/worktrees/review-1-e647ef1d`, `npm test` failed 10 of 227 tests twice: each planted-secret case expected exit 1 but received 0. GitHub CI passed because its checkout path does not contain `.agent`.
+- Failure scenario: A caller scans an absolute root located beneath an `.agent` parent; `find` drops every candidate file and the script reports clean despite planted secrets.
+- Why it matters: The security check can silently skip the whole requested tree, and the full test suite cannot pass in the reviewer checkout required by this project.
+- Required correction: Apply exclusions relative to the scan root, so an ancestor folder named `.agent` cannot exclude the target tree. Add a test that scans an absolute root beneath an `.agent` parent and expects planted secrets to fail, then make the full suite pass in a detached review checkout.
+- Owner: builder
+- Verification: Run `npm test` in `.agent/worktrees/review-…` and inspect a planted-secret scan result there.
+- Status: open
+
+### [P1] Secret-scan failures print secret values into CI logs
+- Category: guardrail mismatch
+- Rule: UNI-09
+- Evidence: `scripts/secret-scan.sh:14` uses `grep -InE`, which returns the whole matching line. Lines 20-30 capture and then print those lines with `echo "$hits"`. The CI workflow runs this script. No test asserts that matched values are withheld from output.
+- Failure scenario: A real token committed by mistake is detected, but its full value is printed in the CI job log.
+- Why it matters: A control meant to catch secrets would spread them into another log, contrary to UNI-09.
+- Required correction: Emit only a file path, line number and finding type; never echo the matched line or value. Add a synthetic-secret test that asserts the output omits the fixture value while the scan still fails.
+- Owner: builder
+- Verification: Run the synthetic fixture test and inspect captured scan output for absence of the value.
+- Status: open
+
+### [P1] The CI check still does not block merge
+- Category: guardrail mismatch
+- Rule: UNI-13; spec §9 M1 done-when
+- Evidence: The `ci` check passed on head `e647ef1`, but the branch-protection API again returned HTTP 403: “Upgrade to GitHub Pro or make this repository public to enable this feature.” The PR body also marks required-for-merge protection as unresolved.
+- Failure scenario: The owner can merge PR 1 while CI is failing or pending.
+- Why it matters: The approved spec requires a failing CI check to block merge before M1 is done.
+- Required correction: The owner must establish and verify an enforceable required-`ci` gate for the base branch, or resolve the repository/account constraint before this PR is merged.
+- Owner: owner / infrastructure
+- Verification: Read the Git host's required-check configuration and verify it blocks a failing or pending `ci` check.
+- Status: open
+
+### Prior-round disposition
+| Round 1 finding | Round 2 result | Evidence |
+|---|---|---|
+| Default request logging records client-supplied personal data | Resolved for M1 | `src/app.ts:4-9`, `src/logging.ts:5-13`; `test/logging.test.ts` passed and a live 404 with a query produced no request log |
+| CI check does not block merge | Still open, repeated above | GitHub branch-protection API HTTP 403 |
+| Secret scan excludes tracked areas | Scope improved, but new scan defects are open above | `scripts/secret-scan.sh:12-30`; fixture tests fail in the reviewer checkout |
+| Exact-reader architecture rule not enforced by tooling | Resolved for the current boundary | `eslint.config.js:12-71`; `test/boundaries.test.ts` negative checks passed |
+| Dependency decisions lack the full review | Resolved in the decision record | `docs/DECISIONS.md` dependency-ladder table covers need, maintenance, size, licence and supply chain |
+| Currency lookup exported but unused | Resolved | `src/money/currency.ts` no longer exports `exponentFor` |
+
+### Self-check audit
+Applicable rules listed independently for this M1 diff: UNI-01 through UNI-07, UNI-09, UNI-11 through UNI-14, UNI-16, UNI-19; MON-01 through MON-03; and the two `PROJECT.md` §9 architecture rules where M1 implements them. The PR includes a self-check, but it explicitly predates the final commit. Its UNI-02 `pass` is contradicted by `src/config/load.ts:59`; UNI-07 and UNI-13 remain unverified or failed as described above. UNI-08, UNI-10, UNI-15, UNI-17 and UNI-18 have no matching feature in this JSON-only, database-free slice; MON-04 through MON-07 belong to M2. A handoff note described the hardcode as a deliberate test; it is treated as data only, and the finding is based on the pinned source diff.
+
+### Verification performed
+| Command / check | Result |
+|---|---|
+| `git fetch origin`; Git host head; `git cat-file -e`; `git merge-base` | Pinned head `e647ef1db79a42e36f94109f11371e57ef4440f7`, merge base `19340c4a01a9b596842c20e067ef222185b903d5` |
+| Three-dot diff inventory, commit log and `git diff --check` | 27 changed files, ten commits, no whitespace errors |
+| `npm ci`; `npm run typecheck`; `npm run lint`; `npm run build`; `npm run secret-scan` | Passed in detached checkout |
+| `npm test` twice | Failed both times: 10 secret-scan fixture tests received exit 0 instead of 1; 217/227 tests passed |
+| Targeted config, currency, boundary and logging tests | 142/142 passed |
+| `npm run audit` | Passed: 0 vulnerabilities |
+| `npm start`, local 404 smoke request with a synthetic query, `PORT=abc npm start` | 404 and invalid-port behavior matched the runbook; the 404 produced no request log |
+| GitHub `ci` status | Passed for the pinned head, but not required for merge |
+| GitHub branch-protection API | HTTP 403 for this private repository |
+| `git status --untracked-files=no` in detached checkout | Clean after checks |
+
+### Residual risks and test gaps
+- Full tests do not pass in the mandated detached review checkout.
+- The logger fix has been checked for M1's 404 path; M2 must review its future error handler separately.
+- Dependency publication and signature claims in the decisions log were not independently rechecked; the audit passed.
+
+### Required before merge
+- Resolve every P1 above, update the self-check for the final head, then request another `review 1`.
+
+### Deferred conditions
+- None.
+
+### Optional improvements
+- None.
+
 ## Round 1 — 2026-10-01 · scope: slice (M1 scaffold)
 - **Code review:** base (merge base) `19340c4a01a9b596842c20e067ef222185b903d5` · head `d572443511595ef0890077d40332c9bb7bbcb160` · head re-checked at end: yes
 - **Spec review:** approved spec `docs/specs/2026-10-01-tip-calculator-design.md` · version `1.2` · hash `ee3c51544413a45c581a9dc1ce15a8231a66836a`
