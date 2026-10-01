@@ -2,8 +2,17 @@
 
 <!-- Committed. Newest at the top. One entry per decision. A settled decision is reopened only by the owner. -->
 
+## 2026-10-01 — Public repository with a clean history and a required `ci` check
+- **Decision:** The project lives in a new public repository, `charliekhc/tip-calculator`. All commits use the owner's GitHub noreply address, and the local home path was removed from `agents/PROJECT.md`. The earlier private repository stays private and untouched. On the new repository `main` requires the `ci` status check, and the rule applies to administrators.
+- **Why:** The private repository's plan cannot enforce a required check (GitHub returned HTTP 403), and the spec (§9 M1) and UNI-13 need a failing check to block merge. The owner chose a public repository and asked that the personal email not be public. GitHub keeps old commits reachable by hash after a force-push, so rewriting the old repository in place would not hide the email; a new repository does.
+- **Alternatives rejected:** Upgrading to GitHub Pro (the owner chose public); rewriting history in place (old hashes stay viewable); keeping the personal email in commits (the owner declined).
+- **Scope / affects:** `agents/PROJECT.md` §3 and §4; UNI-13; UNI-11 (the repository, its review files and the kit are now public).
+- **Versions:** none
+- **Exception to a rule?** no
+- **Decided by:** owner
+
 ## 2026-10-01 — M1 ships as one PR over the size target; private GitHub repo
-- **Decision:** M1 is one PR of about 1,113 added lines (excluding the lockfile), over the 400-line target. The remote is a new private GitHub repository `charliekhc/tip-calculator-api`, created by the builder at the owner's request.
+- **Decision:** M1 is one PR of about 1,113 added lines (excluding the lockfile), over the 400-line target. The remote was first a private GitHub repository, created by the builder at the owner's request; it was replaced by the public repository in the entry above.
 - **Why:** The owner chose one PR over a split when offered both. The spec plans one PR per milestone. About 70% of the lines are tests.
 - **Alternatives rejected:** Splitting M1 into two PRs (the owner declined).
 - **Scope / affects:** PR size target in `agents/PROJECT.md` §4 (exception for M1 only); `agents/PROJECT.md` §4 remote.
