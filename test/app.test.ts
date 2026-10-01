@@ -12,11 +12,18 @@ const config: AppConfig = {
   port: 3000,
 };
 
-describe('buildApp (M1: no routes)', () => {
-  it('returns 404 for POST /split because the route is not built yet', async () => {
+describe('buildApp', () => {
+  it('serves POST /split and answers a request with no Content-Type and no body with 415', async () => {
     const app = buildApp(config);
     const response = await app.inject({ method: 'POST', url: '/split' });
-    expect(response.statusCode).toBe(404);
+    expect(response.statusCode).toBe(415);
+    await app.close();
+  });
+
+  it('removes the built-in text/plain parser', async () => {
+    const app = buildApp(config);
+    expect(app.hasContentTypeParser('text/plain')).toBe(false);
+    expect(app.hasContentTypeParser('application/json')).toBe(true);
     await app.close();
   });
 });

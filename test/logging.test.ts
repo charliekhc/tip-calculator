@@ -47,6 +47,8 @@ describe('logging (UNI-09)', () => {
     const { statusCode, logs } = await logsFor(`/boom?${SENSITIVE_QUERY}`);
     expect(statusCode).toBe(500);
     expectNoPersonalData(logs);
+    expect(logs).toContain('"msg":"request failed"');
+    expect(logs).not.toContain('/boom');
   });
 
   it('still writes log lines to the stream', async () => {
