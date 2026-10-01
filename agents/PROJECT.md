@@ -63,7 +63,7 @@ Spec wins for *what we should build*. If two of these disagree, stop and ask Cha
 
 ## 4. Repository
 
-- **Remote:** pending remote <!-- `pending remote` is a valid value until the owner creates the repository; the builder asks for it before the first PR -->
+- **Remote:** https://github.com/charliekhc/tip-calculator-api (private) <!-- `pending remote` is a valid value until the owner creates the repository; the builder asks for it before the first PR -->
 - **Default branch:** main <!-- usually main -->
 - **Merge policy:** Reviewer (GPT-6) approves → Charlie merges. The builder never merges. The reviewer never merges.
 - **Commit trailer:** `none` <!-- e.g. "Co-Authored-By: <agent> <model> <email>", or "none" -->
