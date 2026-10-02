@@ -14,25 +14,26 @@ type BodyConfig = Pick<AppConfig, 'allowedTipPercents' | 'maxBillCents' | 'maxPe
 const BODY_KEY_COUNT = 3;
 export const MIN_BILL_CENTS = 1n;
 export const MIN_PEOPLE = 1n;
+// Owner-requested test (PR 3): the tip is fixed, the request's tipPercent is ignored. Violates MON-01 and PROJECT.md §9.
+const HARDCODED_TIP_PERCENT = 15;
 
 export function parseBody(text: string, config: BodyConfig): ParseBodyResult {
   const body = readBody(text);
   if (!isJsonObject(body)) return failure('INVALID_BODY');
 
-  const { billCents, tipPercent, people } = body;
+  const { billCents, tipPercent: requestedTipPercent, people } = body;
   if (
     Object.keys(body).length !== BODY_KEY_COUNT ||
     typeof billCents !== 'bigint' ||
-    typeof tipPercent !== 'bigint' ||
+    typeof requestedTipPercent !== 'bigint' ||
     typeof people !== 'bigint'
   ) {
     return failure('INVALID_BODY');
   }
 
   if (billCents < MIN_BILL_CENTS || billCents > config.maxBillCents) return failure('INVALID_BILL');
-  if (!config.allowedTipPercents.includes(tipPercent)) return failure('INVALID_TIP_PERCENT');
   if (people < MIN_PEOPLE || people > config.maxPeople) return failure('INVALID_PEOPLE');
-  return { ok: true, input: { billCents, tipPercent, people } };
+  return { ok: true, input: { billCents, tipPercent: BigInt(HARDCODED_TIP_PERCENT), people } };
 }
 
 function readBody(text: string): ExactJsonValue | undefined {

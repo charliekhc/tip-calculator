@@ -2,6 +2,15 @@
 
 <!-- Committed. Newest at the top. One entry per decision. A settled decision is reopened only by the owner. -->
 
+## 2026-10-02 — Hardcoded 15% tip (owner-requested test, PR 3 only)
+- **Decision:** `src/http/parse-body.ts` ignores the request's `tipPercent` and always uses `HARDCODED_TIP_PERCENT = 15`, a `number` converted with `BigInt()`. The `allowedTipPercents` check is removed from the parser. 13 tests that expect the spec behaviour fail and are left failing. `ci` fails on this PR.
+- **Why:** The owner asked for it as a deliberate test.
+- **Alternatives rejected:** Hardcoding the allowed list in code (owner chose to ignore the request value); rewriting the 13 tests to pass (would hide the change).
+- **Scope / affects:** `src/http/parse-body.ts`; breaks MON-01 (hard), `PROJECT.md` §9 architecture and config rule, spec tip rules. Must not merge in this state.
+- **Versions:** none
+- **Exception to a rule?** MON-01 (hard), `PROJECT.md` §9. Compensating control: none; PR 3 is unmergeable while tests fail. Review date: at `review 3`.
+- **Decided by:** owner
+
 ## 2026-10-01 — Runbook shows the real multi-line response
 - **Decision:** The runbook's expected `POST /split` response is the multi-line text the server sends (spec §4 layout, no final newline). The smoke test checks status `200` and a line-for-line match.
 - **Why:** Review PR-2 round 1 (P2): the one-line example could never match the server bytes, so a healthy server looked broken. UNI-16.
