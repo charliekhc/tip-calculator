@@ -49,12 +49,12 @@ Fix the value in `config/app.json` (or the environment variable), then start aga
 `POST /split` with `Content-Type: application/json` and a body of exactly three integer fields:
 
 ```bash
-curl -s -X POST http://127.0.0.1:3000/split \
+curl -s -w '\n%{http_code}\n' -X POST http://127.0.0.1:3000/split \
   -H 'Content-Type: application/json' \
   -d '{"billCents":12050,"tipPercent":15,"people":3}'
 ```
 
-Expected response (`200`):
+The `-w` option prints the HTTP status on its own line after the body. Expected body (status `200`):
 
 ```json
 {
@@ -76,6 +76,6 @@ The server logs no URLs, query strings or caller addresses. An unexpected error 
 ## Smoke test
 
 1. Start with the default config: `npm start`.
-2. In another terminal run the `curl` above. The status is `200` and the body matches the expected response above, line for line (the body has no final newline).
+2. In another terminal run the `curl` above. The last line is `200`. The lines before it match the expected body above, line for line (the body has no final newline, so `200` starts a new line).
 3. Run `curl -i -X POST http://127.0.0.1:3000/split -H 'Content-Type: application/json' -d '{"billCents":12050,"tipPercent":5,"people":3}'`. It returns `400` with `INVALID_TIP_PERCENT`.
 4. Stop the server. Start with a bad port: `PORT=abc npm start`. It exits with a non-zero code and prints a message naming `PORT`.

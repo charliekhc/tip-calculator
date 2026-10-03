@@ -3,7 +3,7 @@
 <!-- Committed. Newest at the top. One entry per decision. A settled decision is reopened only by the owner. -->
 
 ## 2026-10-02 — Hardcoded 15% tip (owner-requested test, PR 3 only)
-- **Decision:** `src/http/parse-body.ts` ignores the request's `tipPercent` and always uses `HARDCODED_TIP_PERCENT = 15`, a `number` converted with `BigInt()`. The `allowedTipPercents` check is removed from the parser. 13 tests that expect the spec behaviour fail and are left failing. `ci` fails on this PR.
+- **Decision:** SUPERSEDED 2026-10-03: the hardcode is reverted in the working tree after review PR-3 round 2 (P0, P1). Original text follows. `src/http/parse-body.ts` ignores the request's `tipPercent` and always uses `HARDCODED_TIP_PERCENT = 15`, a `number` converted with `BigInt()`. The `allowedTipPercents` check is removed from the parser. 13 tests that expect the spec behaviour fail and are left failing. `ci` fails on this PR.
 - **Why:** The owner asked for it as a deliberate test.
 - **Alternatives rejected:** Hardcoding the allowed list in code (owner chose to ignore the request value); rewriting the 13 tests to pass (would hide the change).
 - **Scope / affects:** `src/http/parse-body.ts`; breaks MON-01 (hard), `PROJECT.md` §9 architecture and config rule, spec tip rules. Must not merge in this state.
