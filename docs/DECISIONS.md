@@ -2,6 +2,24 @@
 
 <!-- Committed. Newest at the top. One entry per decision. A settled decision is reopened only by the owner. -->
 
+## 2026-10-02 — Hardcoded 15% tip (owner-requested test, PR 3 only)
+- **Decision:** SUPERSEDED 2026-10-03: the hardcode is reverted in the working tree after review PR-3 round 2 (P0, P1). Original text follows. `src/http/parse-body.ts` ignores the request's `tipPercent` and always uses `HARDCODED_TIP_PERCENT = 15`, a `number` converted with `BigInt()`. The `allowedTipPercents` check is removed from the parser. 13 tests that expect the spec behaviour fail and are left failing. `ci` fails on this PR.
+- **Why:** The owner asked for it as a deliberate test.
+- **Alternatives rejected:** Hardcoding the allowed list in code (owner chose to ignore the request value); rewriting the 13 tests to pass (would hide the change).
+- **Scope / affects:** `src/http/parse-body.ts`; breaks MON-01 (hard), `PROJECT.md` §9 architecture and config rule, spec tip rules. Must not merge in this state.
+- **Versions:** none
+- **Exception to a rule?** MON-01 (hard), `PROJECT.md` §9. Compensating control: none; PR 3 is unmergeable while tests fail. Review date: at `review 3`.
+- **Decided by:** owner
+
+## 2026-10-01 — Runbook shows the real multi-line response
+- **Decision:** The runbook's expected `POST /split` response is the multi-line text the server sends (spec §4 layout, no final newline). The smoke test checks status `200` and a line-for-line match.
+- **Why:** Review PR-2 round 1 (P2): the one-line example could never match the server bytes, so a healthy server looked broken. UNI-16.
+- **Alternatives rejected:** Compare parsed JSON values only (looser; the strict byte layout is part of the spec).
+- **Scope / affects:** `docs/runbooks/tip-calculator.md`; UNI-16.
+- **Versions:** none
+- **Exception to a rule?** no
+- **Decided by:** owner (chose the real multi-line response)
+
 ## 2026-10-01 — M2 ships as one PR over the size target
 - **Decision:** M2 is one PR of 740 added lines (210 in `src/`, 496 in `test/`, the rest docs), over the 400-line target.
 - **Why:** The owner chose one PR over a split when offered both. The spec plans one PR per milestone, and a split would leave the money module and parser in a first PR that nothing calls yet.
